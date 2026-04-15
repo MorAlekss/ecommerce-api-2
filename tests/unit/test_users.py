@@ -31,20 +31,26 @@ async def test_update_profile():
         result = await update_profile("u1", "token123", {"name": "Alice Updated"})
         assert result["name"] == "Alice Updated"
 
-def test_list_users():
-    with patch('src.users.admin.requests.get') as mock_get:
+@pytest.mark.asyncio
+async def test_list_users():
+    with patch('src.users.admin.httpx.AsyncClient') as MockClient:
+        mock_client = AsyncMock()
+        MockClient.return_value.__aenter__.return_value = mock_client
         mock_response = MagicMock()
         mock_response.json.return_value = {"users": [{"id": "u1"}, {"id": "u2"}], "total": 2}
         mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
-        result = list_users("admin_token")
+        mock_client.get.return_value = mock_response
+        result = await list_users("admin_token")
         assert result["total"] == 2
 
-def test_get_preferences():
-    with patch('src.users.preferences.requests.get') as mock_get:
+@pytest.mark.asyncio
+async def test_get_preferences():
+    with patch('src.users.preferences.httpx.AsyncClient') as MockClient:
+        mock_client = AsyncMock()
+        MockClient.return_value.__aenter__.return_value = mock_client
         mock_response = MagicMock()
         mock_response.json.return_value = {"theme": "dark", "language": "en"}
         mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
-        result = get_preferences("u1", "token123")
+        mock_client.get.return_value = mock_response
+        result = await get_preferences("u1", "token123")
         assert result["theme"] == "dark"

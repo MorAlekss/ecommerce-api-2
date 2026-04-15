@@ -39,11 +39,14 @@ async def test_post():
         assert result["id"] == "123"
 
 
-def test_authenticated_get():
-    with patch('src.utils.middleware.requests.get') as mock_get:
+@pytest.mark.asyncio
+async def test_authenticated_get():
+    with patch('src.utils.middleware.httpx.AsyncClient') as MockClient:
+        mock_client = AsyncMock()
+        MockClient.return_value.__aenter__.return_value = mock_client
         mock_response = MagicMock()
         mock_response.json.return_value = {"data": "secure"}
         mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
-        result = authenticated_get("https://api.example.com/secure", "token123")
+        mock_client.get.return_value = mock_response
+        result = await authenticated_get("https://api.example.com/secure", "token123")
         assert result["data"] == "secure"
